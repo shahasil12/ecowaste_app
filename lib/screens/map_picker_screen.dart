@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../core/theme.dart';
 
 class MapPickerScreen extends StatefulWidget {
@@ -11,17 +12,6 @@ class MapPickerScreen extends StatefulWidget {
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
   LatLng _selectedLocation = const LatLng(19.0760, 72.8777); // Default Mumbai
-  GoogleMapController? _mapController;
-
-  void _onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
-  }
-
-  void _onTap(LatLng location) {
-    setState(() {
-      _selectedLocation = location;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,19 +27,36 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           )
         ],
       ),
-      body: GoogleMap(
-        onMapCreated: _onMapCreated,
-        initialCameraPosition: CameraPosition(
-          target: _selectedLocation,
-          zoom: 12.0,
+      body: FlutterMap(
+        options: MapOptions(
+          initialCenter: _selectedLocation,
+          initialZoom: 12.0,
+          onTap: (tapPosition, point) {
+            setState(() {
+              _selectedLocation = point;
+            });
+          },
         ),
-        onTap: _onTap,
-        markers: {
-          Marker(
-            markerId: const MarkerId('selected'),
-            position: _selectedLocation,
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.example.ecowaste_app',
           ),
-        },
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _selectedLocation,
+                width: 40,
+                height: 40,
+                child: const Icon(
+                  Icons.location_on,
+                  color: Colors.red,
+                  size: 40,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

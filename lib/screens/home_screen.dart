@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _citizen;
   bool _loading = true;
 
-  final List<Widget> _pages = [
+  List<Widget> _pages = [
     const _DashboardTab(),
     const MyReportsScreen(),
     const LeaderboardScreen(),
@@ -47,13 +47,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ReportScreen()),
-        ).then((_) {
-          // Refresh if returned
-          if (_selectedIndex == 1) setState(() {});
-        }),
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ReportScreen()),
+          );
+          if (result == true) {
+            // A report was submitted! Force refresh MyReports and switch to it.
+            setState(() {
+              _pages[1] = MyReportsScreen(key: UniqueKey());
+              _selectedIndex = 1;
+            });
+          }
+        },
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.black,
         icon: const Icon(Icons.add_a_photo),
@@ -314,10 +320,17 @@ class _DashboardTabState extends State<_DashboardTab> {
               icon: Icons.add_a_photo_outlined,
               label: 'Report Waste',
               color: AppTheme.primary,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ReportScreen()),
-              ),
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReportScreen()),
+                );
+                if (result == true) {
+                  // To switch tabs from DashboardTab, we can use a callback or global event.
+                  // For simplicity, we can reload the dashboard data here.
+                  _load();
+                }
+              },
             ),
             _ActionCard(
               icon: Icons.list_alt_outlined,

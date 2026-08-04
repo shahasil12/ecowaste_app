@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/theme.dart';
 import '../services/api_service.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'map_picker_screen.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -104,7 +104,7 @@ class _ReportScreenState extends State<ReportScreen> {
         _showSnack('🎉 Report submitted! +5 eco points earned.', AppTheme.success);
         await Future.delayed(const Duration(seconds: 1));
         if (!mounted) return;
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         _showSnack('Failed: ${result['data']}', AppTheme.error);
       }
