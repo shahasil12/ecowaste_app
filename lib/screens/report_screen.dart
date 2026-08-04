@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/theme.dart';
 import '../services/api_service.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'map_picker_screen.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -18,6 +20,8 @@ class _ReportScreenState extends State<ReportScreen> {
   String _wasteType = 'Plastic';
   File? _image;
   bool _loading = false;
+  double? _latitude;
+  double? _longitude;
 
   final List<String> _wasteTypes = [
     'Plastic', 'Organic', 'E-waste', 'Metal', 'Glass', 'Other'
@@ -92,6 +96,8 @@ class _ReportScreenState extends State<ReportScreen> {
         wasteType: _wasteType,
         fee: int.tryParse(_feeCtrl.text) ?? 0,
         image: _image!,
+        latitude: _latitude,
+        longitude: _longitude,
       );
       if (!mounted) return;
       if (result['status'] == 201) {
@@ -208,15 +214,55 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Place
-              TextFormField(
-                controller: _placeCtrl,
-                style: const TextStyle(color: AppTheme.textPrimary),
-                decoration: const InputDecoration(
-                  labelText: 'Location / Place',
-                  prefixIcon: Icon(Icons.location_on_outlined),
-                ),
-                validator: (v) => v == null || v.isEmpty ? 'Enter the location of waste' : null,
+              // Place and Map Picker
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _placeCtrl,
+                      style: const TextStyle(color: AppTheme.textPrimary),
+                      decoration: const InputDecoration(
+                        labelText: 'Location / Place',
+                        prefixIcon: Icon(Icons.location_on_outlined),
+                      ),
+                      validator: (v) => v == null || v.isEmpty ? 'Enter the location of waste' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: () async {
+                      final LatLng? result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MapPickerScreen()),
+                      );
+                      if (result != null) {
+                        setState(() {
+                          _latitude = result.latitude;
+                          _longitude = result.longitude;
+                          if (_placeCtrl.text.isEmpty) {
+                            _placeCtrl.text = '${result.latitude.toStringAsFixed(4)}, ${result.longitude.toStringAsFixed(4)}';
+                          }
+                        });
+                        _showSnack('Map location selected!', AppTheme.success);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: _latitude != null ? AppTheme.primary.withOpacity(0.2) : AppTheme.card,
+                        border: Border.all(
+                          color: _latitude != null ? AppTheme.primary : const Color(0xFF2A2F4F),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.map_outlined,
+                        color: _latitude != null ? AppTheme.primary : AppTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
 
