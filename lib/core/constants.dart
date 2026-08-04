@@ -1,4 +1,4 @@
-const String baseUrl = 'https://eco-waste.vercel.app/api/v1';
+const String baseUrl = 'https://eco-waste-green.vercel.app/api/v1';
 
 // Auth
 const String registerUrl    = '$baseUrl/auth/register/';
