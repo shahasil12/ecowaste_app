@@ -64,7 +64,9 @@ class _AdminCompaniesScreenState extends State<AdminCompaniesScreen> {
       appBar: widget.hideAppBar ? null : AppBar(title: const Text('Manage Companies')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
+          : _companies.isEmpty
+              ? const Center(child: Text('No companies found.', style: TextStyle(color: AppTheme.textSecondary)))
+              : ListView.builder(
               itemCount: _companies.length,
               itemBuilder: (context, index) {
                 final c = _companies[index];

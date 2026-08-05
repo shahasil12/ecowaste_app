@@ -112,7 +112,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
       appBar: widget.hideAppBar ? null : AppBar(title: const Text('Manage Reports')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
+          : _reports.isEmpty
+              ? const Center(child: Text('No reports found.', style: TextStyle(color: AppTheme.textSecondary)))
+              : ListView.builder(
               itemCount: _reports.length,
               itemBuilder: (context, index) {
                 final r = _reports[index];

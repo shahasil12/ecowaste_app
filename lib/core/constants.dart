@@ -1,4 +1,6 @@
 const String baseUrl = 'https://eco-waste-green.vercel.app/api/v1';
+// For local testing on your Android device, uncomment the line below and comment the one above:
+// const String baseUrl = 'http://192.168.0.157:8000/api/v1';
 
 // Auth
 const String registerUrl        = '$baseUrl/auth/register/';

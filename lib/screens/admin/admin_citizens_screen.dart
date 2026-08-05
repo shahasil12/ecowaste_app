@@ -64,7 +64,9 @@ class _AdminCitizensScreenState extends State<AdminCitizensScreen> {
       appBar: widget.hideAppBar ? null : AppBar(title: const Text('Manage Citizens')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
+          : _citizens.isEmpty
+              ? const Center(child: Text('No citizens found.', style: TextStyle(color: AppTheme.textSecondary)))
+              : ListView.builder(
               itemCount: _citizens.length,
               itemBuilder: (context, index) {
                 final c = _citizens[index];
