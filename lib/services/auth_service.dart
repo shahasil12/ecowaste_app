@@ -108,6 +108,20 @@ class AuthService {
     return {'status': res.statusCode, 'data': data};
   }
 
+  static Future<Map<String, dynamic>> adminLogin(String username, String password) async {
+    final res = await http.post(
+      Uri.parse(adminLoginUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'username': username, 'password': password}),
+    );
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode == 200) {
+      await saveTokens(data['access'], data['refresh']);
+      await saveRole(data['role'] ?? 'admin');
+    }
+    return {'status': res.statusCode, 'data': data};
+  }
+
   static Future<Map<String, dynamic>> register({
     required String username,
     required String password,
@@ -129,6 +143,31 @@ class AuthService {
       await saveTokens(data['access'], data['refresh']);
       await saveRole(data['role'] ?? 'citizen');
       await saveCitizen(data['citizen']);
+    }
+    return {'status': res.statusCode, 'data': data};
+  }
+
+  static Future<Map<String, dynamic>> companyRegister({
+    required String name,
+    required String password,
+    required String address,
+    required String contactEmail,
+  }) async {
+    final res = await http.post(
+      Uri.parse(companyRegisterUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'password': password,
+        'address': address,
+        'contact_email': contactEmail,
+      }),
+    );
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode == 201) {
+      await saveTokens(data['access'], data['refresh']);
+      await saveRole(data['role'] ?? 'company');
+      await saveCompany(data['company']);
     }
     return {'status': res.statusCode, 'data': data};
   }

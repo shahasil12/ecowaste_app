@@ -1,36 +1,13 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import 'login_screen.dart';
-import '../core/theme.dart';
-import 'company/company_reports_screen.dart';
-import 'company/company_pickups_screen.dart';
+import '../../core/theme.dart';
+import '../../services/auth_service.dart';
+import '../login_screen.dart';
+import 'admin_citizens_screen.dart';
+import 'admin_companies_screen.dart';
+import 'admin_reports_screen.dart';
 
-class CompanyDashboardScreen extends StatefulWidget {
-  const CompanyDashboardScreen({super.key});
-
-  @override
-  State<CompanyDashboardScreen> createState() => _CompanyDashboardScreenState();
-}
-
-class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
-  Map<String, dynamic>? _companyData;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCompanyData();
-  }
-
-  Future<void> _loadCompanyData() async {
-    final company = await AuthService.getCompany();
-    if (mounted) {
-      setState(() {
-        _companyData = company;
-        _loading = false;
-      });
-    }
-  }
+class AdminDashboardScreen extends StatelessWidget {
+  const AdminDashboardScreen({super.key});
 
   void _logout(BuildContext context) async {
     await AuthService.logout();
@@ -40,15 +17,9 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    final name = _companyData?['name'] ?? 'Company Portal';
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(name),
+        title: const Text('Admin Dashboard'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -61,18 +32,21 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            const Icon(Icons.business_center, size: 80, color: AppTheme.primary),
+            const Icon(Icons.admin_panel_settings, size: 80, color: AppTheme.primary),
             const SizedBox(height: 20),
             const Text(
-              'Company Portal',
+              'Superuser Controls',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
             ),
             const SizedBox(height: 40),
-            _buildCard(context, 'Assigned Reports', Icons.report_problem, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CompanyReportsScreen()));
+            _buildCard(context, 'Manage Citizens', Icons.people, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCitizensScreen()));
             }),
-            _buildCard(context, 'Pickup Requests', Icons.local_shipping, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CompanyPickupsScreen()));
+            _buildCard(context, 'Manage Companies', Icons.business, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCompaniesScreen()));
+            }),
+            _buildCard(context, 'Manage Reports', Icons.report, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminReportsScreen()));
             }),
           ],
         ),

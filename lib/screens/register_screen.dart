@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
+import 'company_dashboard_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  final bool initialIsCompany;
+  const RegisterScreen({super.key, this.initialIsCompany = false});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -16,8 +18,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _placeCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
   bool _loading = false;
   bool _obscure = true;
+  late bool _isCompany;
+
+  @override
+  void initState() {
+    super.initState();
+    _isCompany = widget.initialIsCompany;
+  }
 
   @override
   void dispose() {
@@ -25,6 +37,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordCtrl.dispose();
     _phoneCtrl.dispose();
     _placeCtrl.dispose();
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _addressCtrl.dispose();
     super.dispose();
   }
 
@@ -32,17 +47,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final result = await AuthService.register(
-        username: _usernameCtrl.text.trim(),
-        password: _passwordCtrl.text,
-        phone: _phoneCtrl.text.trim(),
-        place: _placeCtrl.text.trim(),
-      );
+      final result = _isCompany
+          ? await AuthService.companyRegister(
+              name: _nameCtrl.text.trim(),
+              password: _passwordCtrl.text,
+              address: _addressCtrl.text.trim(),
+              contactEmail: _emailCtrl.text.trim(),
+            )
+          : await AuthService.register(
+              username: _usernameCtrl.text.trim(),
+              password: _passwordCtrl.text,
+              phone: _phoneCtrl.text.trim(),
+              place: _placeCtrl.text.trim(),
+            );
       if (!mounted) return;
       if (result['status'] == 201) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(
+              builder: (_) => _isCompany
+                  ? const CompanyDashboardScreen()
+                  : const HomeScreen()),
           (_) => false,
         );
       } else {
@@ -110,13 +135,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     'Join the eco-warrior community 🌱',
                     style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                   ),
-                  const SizedBox(height: 36),
-                  _buildField(
-                    controller: _usernameCtrl,
-                    label: 'Username',
-                    icon: Icons.person_outline,
-                    validator: (v) => v == null || v.isEmpty ? 'Enter a username' : null,
+                  const SizedBox(height: 24),
+                  // Role Toggle
+                  Center(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () => setState(() => _isCompany = false),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: !_isCompany ? AppTheme.primary : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'Citizen',
+                                style: TextStyle(
+                                  color: !_isCompany ? Colors.black : AppTheme.textSecondary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => setState(() => _isCompany = true),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: _isCompany ? AppTheme.primary : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'Company',
+                                style: TextStyle(
+                                  color: _isCompany ? Colors.black : AppTheme.textSecondary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                  const SizedBox(height: 36),
+                  if (!_isCompany)
+                    _buildField(
+                      controller: _usernameCtrl,
+                      label: 'Username',
+                      icon: Icons.person_outline,
+                      validator: (v) => v == null || v.isEmpty ? 'Enter a username' : null,
+                    )
+                  else
+                    _buildField(
+                      controller: _nameCtrl,
+                      label: 'Company Name',
+                      icon: Icons.business,
+                      validator: (v) => v == null || v.isEmpty ? 'Enter company name' : null,
+                    ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordCtrl,
@@ -138,26 +220,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         : null,
                   ),
                   const SizedBox(height: 16),
-                  _buildField(
-                    controller: _phoneCtrl,
-                    label: 'Phone Number (10 digits)',
-                    icon: Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Enter phone number';
-                      if (!RegExp(r'^\d{10}$').hasMatch(v)) {
-                        return 'Enter a valid 10-digit number';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildField(
-                    controller: _placeCtrl,
-                    label: 'Place / City',
-                    icon: Icons.location_on_outlined,
-                    validator: (v) => v == null || v.isEmpty ? 'Enter your place' : null,
-                  ),
+                  if (!_isCompany) ...[
+                    _buildField(
+                      controller: _phoneCtrl,
+                      label: 'Phone Number (10 digits)',
+                      icon: Icons.phone_outlined,
+                      keyboardType: TextInputType.phone,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Enter phone number';
+                        if (!RegExp(r'^\d{10}$').hasMatch(v)) {
+                          return 'Enter a valid 10-digit number';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildField(
+                      controller: _placeCtrl,
+                      label: 'Place / City',
+                      icon: Icons.location_on_outlined,
+                      validator: (v) => v == null || v.isEmpty ? 'Enter your place' : null,
+                    ),
+                  ] else ...[
+                    _buildField(
+                      controller: _emailCtrl,
+                      label: 'Contact Email',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Enter contact email';
+                        if (!v.contains('@')) return 'Enter a valid email';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildField(
+                      controller: _addressCtrl,
+                      label: 'Company Address',
+                      icon: Icons.location_on_outlined,
+                      validator: (v) => v == null || v.isEmpty ? 'Enter company address' : null,
+                    ),
+                  ],
                   const SizedBox(height: 36),
                   SizedBox(
                     width: double.infinity,

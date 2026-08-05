@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 import 'company_dashboard_screen.dart';
+import 'admin/admin_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
   bool _obscure = true;
-  bool _isCompany = false;
+  String _selectedRole = 'citizen';
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
 
@@ -46,20 +47,37 @@ class _LoginScreenState extends State<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final result = _isCompany 
-          ? await AuthService.companyLogin(
-              _usernameCtrl.text.trim(),
-              _passwordCtrl.text,
-            )
-          : await AuthService.login(
-              _usernameCtrl.text.trim(),
-              _passwordCtrl.text,
-            );
+      dynamic result;
+      if (_selectedRole == 'admin') {
+        result = await AuthService.adminLogin(
+          _usernameCtrl.text.trim(),
+          _passwordCtrl.text,
+        );
+      } else if (_selectedRole == 'company') {
+        result = await AuthService.companyLogin(
+          _usernameCtrl.text.trim(),
+          _passwordCtrl.text,
+        );
+      } else {
+        result = await AuthService.login(
+          _usernameCtrl.text.trim(),
+          _passwordCtrl.text,
+        );
+      }
+      
       if (!mounted) return;
       if (result['status'] == 200) {
+        Widget nextScreen;
+        if (_selectedRole == 'admin') {
+          nextScreen = const AdminDashboardScreen();
+        } else if (_selectedRole == 'company') {
+          nextScreen = const CompanyDashboardScreen();
+        } else {
+          nextScreen = const HomeScreen();
+        }
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => _isCompany ? const CompanyDashboardScreen() : const HomeScreen()),
+          MaterialPageRoute(builder: (_) => nextScreen),
         );
       } else {
         final msg = result['data']['error'] ?? 'Login failed';
@@ -170,34 +188,51 @@ class _LoginScreenState extends State<LoginScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             GestureDetector(
-                              onTap: () => setState(() => _isCompany = false),
+                              onTap: () => setState(() => _selectedRole = 'citizen'),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: !_isCompany ? AppTheme.primary : Colors.transparent,
+                                  color: _selectedRole == 'citizen' ? AppTheme.primary : Colors.transparent,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   'Citizen',
                                   style: TextStyle(
-                                    color: !_isCompany ? Colors.black : AppTheme.textSecondary,
+                                    color: _selectedRole == 'citizen' ? Colors.black : AppTheme.textSecondary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                             ),
                             GestureDetector(
-                              onTap: () => setState(() => _isCompany = true),
+                              onTap: () => setState(() => _selectedRole = 'company'),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: _isCompany ? AppTheme.primary : Colors.transparent,
+                                  color: _selectedRole == 'company' ? AppTheme.primary : Colors.transparent,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   'Company',
                                   style: TextStyle(
-                                    color: _isCompany ? Colors.black : AppTheme.textSecondary,
+                                    color: _selectedRole == 'company' ? Colors.black : AppTheme.textSecondary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => setState(() => _selectedRole = 'admin'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _selectedRole == 'admin' ? AppTheme.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Admin',
+                                  style: TextStyle(
+                                    color: _selectedRole == 'admin' ? Colors.black : AppTheme.textSecondary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -213,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen>
                       controller: _usernameCtrl,
                       style: const TextStyle(color: AppTheme.textPrimary),
                       decoration: InputDecoration(
-                        labelText: _isCompany ? 'Company Name' : 'Username',
+                        labelText: _selectedRole == 'company' ? 'Company Name' : 'Username',
                         prefixIcon: const Icon(Icons.person_outline),
                       ),
                       validator: (v) => v == null || v.isEmpty ? 'Enter your name' : null,
@@ -264,7 +299,7 @@ class _LoginScreenState extends State<LoginScreen>
                         GestureDetector(
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                            MaterialPageRoute(builder: (_) => RegisterScreen(initialIsCompany: _selectedRole == 'company')),
                           ),
                           child: const Text(
                             'Sign Up',

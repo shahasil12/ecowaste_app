@@ -5,6 +5,7 @@ import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/company_dashboard_screen.dart';
+import 'screens/admin/admin_dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,7 +69,13 @@ class _SplashGateState extends State<_SplashGate> with SingleTickerProviderState
 
     Widget nextScreen = const LoginScreen();
     if (loggedIn) {
-      nextScreen = (role == 'company') ? const CompanyDashboardScreen() : const HomeScreen();
+      if (role == 'admin') {
+        nextScreen = const AdminDashboardScreen();
+      } else if (role == 'company') {
+        nextScreen = const CompanyDashboardScreen();
+      } else {
+        nextScreen = const HomeScreen();
+      }
     }
 
     Navigator.pushReplacement(
