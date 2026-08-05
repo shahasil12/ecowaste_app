@@ -58,18 +58,19 @@ class _AdminBinsScreenState extends State<AdminBinsScreen> {
     }
   }
 
-  void _showAddBinDialog() {
-    final nameCtrl = TextEditingController();
-    final addressCtrl = TextEditingController();
-    final latCtrl = TextEditingController();
-    final lngCtrl = TextEditingController();
-    final typesCtrl = TextEditingController();
+  void _showAddEditBinDialog([Map<String, dynamic>? bin]) {
+    final isEdit = bin != null;
+    final nameCtrl = TextEditingController(text: bin?['name'] ?? '');
+    final addressCtrl = TextEditingController(text: bin?['address'] ?? '');
+    final latCtrl = TextEditingController(text: bin?['latitude']?.toString() ?? '');
+    final lngCtrl = TextEditingController(text: bin?['longitude']?.toString() ?? '');
+    final typesCtrl = TextEditingController(text: bin?['types'] ?? '');
     
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A3B5C),
-        title: const Text('Add New Bin'),
+        title: Text(isEdit ? 'Edit Bin' : 'Add New Bin', style: const TextStyle(color: Colors.white)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -88,19 +89,23 @@ class _AdminBinsScreenState extends State<AdminBinsScreen> {
             onPressed: () async {
               final headers = await AuthService.authHeaders();
               headers['Content-Type'] = 'application/json';
-              final res = await http.post(
-                Uri.parse(adminBinsUrl),
-                headers: headers,
-                body: jsonEncode({
-                  'name': nameCtrl.text,
-                  'address': addressCtrl.text,
-                  'latitude': double.tryParse(latCtrl.text) ?? 0.0,
-                  'longitude': double.tryParse(lngCtrl.text) ?? 0.0,
-                  'types': typesCtrl.text,
-                  'status': 'Available'
-                })
-              );
-              if (res.statusCode == 201) {
+              final body = {
+                'name': nameCtrl.text,
+                'address': addressCtrl.text,
+                'latitude': double.tryParse(latCtrl.text) ?? 0.0,
+                'longitude': double.tryParse(lngCtrl.text) ?? 0.0,
+                'types': typesCtrl.text,
+                'status': 'Available'
+              };
+
+              http.Response res;
+              if (isEdit) {
+                res = await http.put(Uri.parse('$adminBinsUrl${bin['id']}/'), headers: headers, body: jsonEncode(body));
+              } else {
+                res = await http.post(Uri.parse(adminBinsUrl), headers: headers, body: jsonEncode(body));
+              }
+
+              if (res.statusCode == 201 || res.statusCode == 200) {
                 if (mounted) Navigator.pop(ctx);
                 _fetchBins();
               }
@@ -117,7 +122,7 @@ class _AdminBinsScreenState extends State<AdminBinsScreen> {
     return Scaffold(
       appBar: widget.hideAppBar ? null : AppBar(title: const Text('Manage Bins')),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddBinDialog,
+        onPressed: () => _showAddEditBinDialog(),
         backgroundColor: AppTheme.primary,
         child: const Icon(Icons.add, color: Colors.black),
       ),
@@ -137,9 +142,18 @@ class _AdminBinsScreenState extends State<AdminBinsScreen> {
                         leading: const CircleAvatar(backgroundColor: Colors.greenAccent, child: Icon(Icons.delete_outline, color: Colors.black)),
                         title: Text(b['name'], style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
                         subtitle: Text('${b['address']} • ${b['status']}', style: const TextStyle(color: AppTheme.textSecondary)),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: AppTheme.error),
-                          onPressed: () => _deleteBin(b['id']),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                              onPressed: () => _showAddEditBinDialog(b),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: AppTheme.error),
+                              onPressed: () => _deleteBin(b['id']),
+                            ),
+                          ],
                         ),
                       ),
                     );

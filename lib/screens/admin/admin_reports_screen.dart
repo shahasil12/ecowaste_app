@@ -36,50 +36,80 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     }
   }
 
-  Future<void> _assignCompany(int reportId) async {
+  Future<void> _editReport(Map<String, dynamic> report) async {
     final companies = await ApiService.getCompanies();
     if (!mounted) return;
 
-    if (companies.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No companies available.')));
-      return;
-    }
+    int? selectedCompanyId = report['assigned_company'];
+    String selectedStatus = report['status'] ?? 'Pending';
+    final statuses = ['Pending', 'In Progress', 'Resolved'];
 
-    final selectedCompanyId = await showDialog<int>(
+    final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A3B5C),
-        title: const Text('Assign Company', style: TextStyle(color: Colors.white)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: companies.length,
-            itemBuilder: (context, index) {
-              final c = companies[index];
-              return ListTile(
-                title: Text(c['name'], style: const TextStyle(color: Colors.white)),
-                onTap: () => Navigator.pop(ctx, c['id']),
-              );
-            },
-          ),
-        ),
-      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1A3B5C),
+              title: const Text('Edit Report', style: TextStyle(color: Colors.white)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Status:', style: TextStyle(color: Colors.white70)),
+                    DropdownButton<String>(
+                      value: selectedStatus,
+                      dropdownColor: const Color(0xFF0A1929),
+                      isExpanded: true,
+                      style: const TextStyle(color: Colors.white),
+                      items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                      onChanged: (val) => setModalState(() => selectedStatus = val!),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Assign Company:', style: TextStyle(color: Colors.white70)),
+                    DropdownButton<int?>(
+                      value: selectedCompanyId,
+                      dropdownColor: const Color(0xFF0A1929),
+                      isExpanded: true,
+                      style: const TextStyle(color: Colors.white),
+                      hint: const Text('Unassigned', style: TextStyle(color: Colors.white54)),
+                      items: [
+                        const DropdownMenuItem<int?>(value: null, child: Text('Unassigned')),
+                        ...companies.map((c) => DropdownMenuItem<int?>(value: c['id'], child: Text(c['name']))),
+                      ],
+                      onChanged: (val) => setModalState(() => selectedCompanyId = val),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel', style: TextStyle(color: Colors.white))),
+                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save', style: TextStyle(color: AppTheme.primary))),
+              ],
+            );
+          }
+        );
+      }
     );
 
-    if (selectedCompanyId == null) return;
+    if (confirm != true) return;
 
     final headers = await AuthService.authHeaders();
+    headers['Content-Type'] = 'application/json';
     final res = await http.patch(
-      Uri.parse('$adminReportsUrl$reportId/'),
+      Uri.parse('$adminReportsUrl${report['id']}/'),
       headers: headers,
-      body: jsonEncode({'assigned_company': selectedCompanyId}),
+      body: jsonEncode({
+        'status': selectedStatus,
+        'assigned_company': selectedCompanyId,
+      }),
     );
 
     if (res.statusCode == 200) {
       _fetchReports();
     } else {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to assign company')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to update report')));
     }
   }
 
@@ -133,11 +163,10 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (!isAssigned)
-                          IconButton(
-                            icon: const Icon(Icons.assignment_ind, color: AppTheme.primary),
-                            onPressed: () => _assignCompany(r['id']),
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                          onPressed: () => _editReport(r),
+                        ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: AppTheme.error),
                           onPressed: () => _deleteReport(r['id']),

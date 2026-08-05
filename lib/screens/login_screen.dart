@@ -20,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen>
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
   bool _obscure = true;
-  String _selectedRole = 'citizen';
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
 
@@ -47,30 +46,18 @@ class _LoginScreenState extends State<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      dynamic result;
-      if (_selectedRole == 'admin') {
-        result = await AuthService.adminLogin(
-          _usernameCtrl.text.trim(),
-          _passwordCtrl.text,
-        );
-      } else if (_selectedRole == 'company') {
-        result = await AuthService.companyLogin(
-          _usernameCtrl.text.trim(),
-          _passwordCtrl.text,
-        );
-      } else {
-        result = await AuthService.login(
-          _usernameCtrl.text.trim(),
-          _passwordCtrl.text,
-        );
-      }
+      final result = await AuthService.unifiedLogin(
+        _usernameCtrl.text.trim(),
+        _passwordCtrl.text,
+      );
       
       if (!mounted) return;
       if (result['status'] == 200) {
+        final role = result['data']['role'] ?? 'citizen';
         Widget nextScreen;
-        if (_selectedRole == 'admin') {
+        if (role == 'admin') {
           nextScreen = const AdminDashboardScreen();
-        } else if (_selectedRole == 'company') {
+        } else if (role == 'company') {
           nextScreen = const CompanyDashboardScreen();
         } else {
           nextScreen = const HomeScreen();
@@ -176,80 +163,14 @@ class _LoginScreenState extends State<LoginScreen>
                       'Sign in to your account',
                       style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                     ),
-                    const SizedBox(height: 24),
-                    // Role Toggle
-                    Center(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black12,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: () => setState(() => _selectedRole = 'citizen'),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: _selectedRole == 'citizen' ? AppTheme.primary : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'Citizen',
-                                  style: TextStyle(
-                                    color: _selectedRole == 'citizen' ? Colors.black : AppTheme.textSecondary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => setState(() => _selectedRole = 'company'),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: _selectedRole == 'company' ? AppTheme.primary : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'Company',
-                                  style: TextStyle(
-                                    color: _selectedRole == 'company' ? Colors.black : AppTheme.textSecondary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => setState(() => _selectedRole = 'admin'),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: _selectedRole == 'admin' ? AppTheme.primary : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'Admin',
-                                  style: TextStyle(
-                                    color: _selectedRole == 'admin' ? Colors.black : AppTheme.textSecondary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
                     // Username / Company Name
                     TextFormField(
                       controller: _usernameCtrl,
                       style: const TextStyle(color: AppTheme.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: _selectedRole == 'company' ? 'Company Name' : 'Username',
-                        prefixIcon: const Icon(Icons.person_outline),
+                      decoration: const InputDecoration(
+                        labelText: 'Username (or Company Name)',
+                        prefixIcon: Icon(Icons.person_outline),
                       ),
                       validator: (v) => v == null || v.isEmpty ? 'Enter your name' : null,
                     ),
@@ -289,19 +210,18 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                     ),
                     const SizedBox(height: 24),
-                    if (_selectedRole != 'admin')
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Don't have an account? ",
-                            style: TextStyle(color: AppTheme.textSecondary),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Don't have an account? ",
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const RegisterScreen(initialIsCompany: false)),
                           ),
-                          GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => RegisterScreen(initialIsCompany: _selectedRole == 'company')),
-                            ),
                             child: const Text(
                               'Sign Up',
                               style: TextStyle(

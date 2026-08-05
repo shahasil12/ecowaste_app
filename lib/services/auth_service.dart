@@ -78,6 +78,28 @@ class AuthService {
 
   // ─── API Calls ─────────────────────────────────────────────────────────────
 
+  static Future<Map<String, dynamic>> unifiedLogin(String username, String password) async {
+    final res = await http.post(
+      Uri.parse(unifiedLoginUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'username': username, 'password': password}),
+    );
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode == 200) {
+      await saveTokens(data['access'], data['refresh']);
+      final role = data['role'] ?? 'citizen';
+      await saveRole(role);
+      
+      if (role == 'citizen' && data['citizen'] != null) {
+        await saveCitizen(data['citizen']);
+      } else if (role == 'company' && data['company'] != null) {
+        await saveCompany(data['company']);
+      }
+      // Admins don't currently have extra data saved here, but they could.
+    }
+    return {'status': res.statusCode, 'data': data};
+  }
+
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final res = await http.post(
       Uri.parse(loginUrl),
