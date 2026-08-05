@@ -58,7 +58,7 @@ class ApiService {
   // ─── Recycling Centers ─────────────────────────────────────────────────────
 
   static Future<List<dynamic>> getRecyclingCenters() async {
-    final res = await http.get(Uri.parse(centersUrl));
+    final res = await http.get(Uri.parse(recyclingCentersUrl));
     if (res.statusCode == 200) return jsonDecode(res.body) as List;
     return [];
   }
