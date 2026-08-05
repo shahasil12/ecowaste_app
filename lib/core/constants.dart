@@ -3,6 +3,7 @@ const String baseUrl = 'https://eco-waste-green.vercel.app/api/v1';
 // Auth
 const String registerUrl    = '$baseUrl/auth/register/';
 const String loginUrl       = '$baseUrl/auth/login/';
+const String companyLoginUrl= '$baseUrl/auth/company-login/';
 const String tokenRefreshUrl= '$baseUrl/auth/token/refresh/';
 
 // Citizen

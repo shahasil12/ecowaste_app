@@ -4,6 +4,7 @@ import 'core/theme.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/company_dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,11 +63,18 @@ class _SplashGateState extends State<_SplashGate> with SingleTickerProviderState
     await Future.delayed(const Duration(milliseconds: 1500));
     if (!mounted) return;
     final loggedIn = await AuthService.isLoggedIn();
+    final role = await AuthService.getRole();
     if (!mounted) return;
+
+    Widget nextScreen = const LoginScreen();
+    if (loggedIn) {
+      nextScreen = (role == 'company') ? const CompanyDashboardScreen() : const HomeScreen();
+    }
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => loggedIn ? const HomeScreen() : const LoginScreen(),
+        pageBuilder: (_, __, ___) => nextScreen,
         transitionsBuilder: (_, animation, __, child) =>
             FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 500),

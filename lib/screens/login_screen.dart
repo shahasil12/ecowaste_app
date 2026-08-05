@@ -3,6 +3,7 @@ import '../core/theme.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
+import 'company_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
   bool _obscure = true;
+  bool _isCompany = false;
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
 
@@ -44,15 +46,20 @@ class _LoginScreenState extends State<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final result = await AuthService.login(
-        _usernameCtrl.text.trim(),
-        _passwordCtrl.text,
-      );
+      final result = _isCompany 
+          ? await AuthService.companyLogin(
+              _usernameCtrl.text.trim(),
+              _passwordCtrl.text,
+            )
+          : await AuthService.login(
+              _usernameCtrl.text.trim(),
+              _passwordCtrl.text,
+            );
       if (!mounted) return;
       if (result['status'] == 200) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => _isCompany ? const CompanyDashboardScreen() : const HomeScreen()),
         );
       } else {
         final msg = result['data']['error'] ?? 'Login failed';
@@ -151,16 +158,65 @@ class _LoginScreenState extends State<LoginScreen>
                       'Sign in to your account',
                       style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                     ),
+                    const SizedBox(height: 24),
+                    // Role Toggle
+                    Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black12,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () => setState(() => _isCompany = false),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: !_isCompany ? AppTheme.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Citizen',
+                                  style: TextStyle(
+                                    color: !_isCompany ? Colors.black : AppTheme.textSecondary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => setState(() => _isCompany = true),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _isCompany ? AppTheme.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Company',
+                                  style: TextStyle(
+                                    color: _isCompany ? Colors.black : AppTheme.textSecondary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 32),
-                    // Username
+                    // Username / Company Name
                     TextFormField(
                       controller: _usernameCtrl,
                       style: const TextStyle(color: AppTheme.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        prefixIcon: Icon(Icons.person_outline),
+                      decoration: InputDecoration(
+                        labelText: _isCompany ? 'Company Name' : 'Username',
+                        prefixIcon: const Icon(Icons.person_outline),
                       ),
-                      validator: (v) => v == null || v.isEmpty ? 'Enter your username' : null,
+                      validator: (v) => v == null || v.isEmpty ? 'Enter your name' : null,
                     ),
                     const SizedBox(height: 16),
                     // Password

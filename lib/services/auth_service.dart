@@ -7,6 +7,8 @@ class AuthService {
   static const _accessKey  = 'access_token';
   static const _refreshKey = 'refresh_token';
   static const _citizenKey = 'citizen_data';
+  static const _companyKey = 'company_data';
+  static const _roleKey    = 'user_role';
 
   // ─── Token Storage ─────────────────────────────────────────────────────────
 
@@ -38,6 +40,28 @@ class AuthService {
     return jsonDecode(raw) as Map<String, dynamic>;
   }
 
+  static Future<void> saveCompany(Map<String, dynamic> company) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_companyKey, jsonEncode(company));
+  }
+
+  static Future<Map<String, dynamic>?> getCompany() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_companyKey);
+    if (raw == null) return null;
+    return jsonDecode(raw) as Map<String, dynamic>;
+  }
+
+  static Future<void> saveRole(String role) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_roleKey, role);
+  }
+
+  static Future<String?> getRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_roleKey);
+  }
+
   static Future<bool> isLoggedIn() async {
     final token = await getAccessToken();
     return token != null && token.isNotEmpty;
@@ -48,6 +72,8 @@ class AuthService {
     await prefs.remove(_accessKey);
     await prefs.remove(_refreshKey);
     await prefs.remove(_citizenKey);
+    await prefs.remove(_companyKey);
+    await prefs.remove(_roleKey);
   }
 
   // ─── API Calls ─────────────────────────────────────────────────────────────
@@ -61,7 +87,23 @@ class AuthService {
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     if (res.statusCode == 200) {
       await saveTokens(data['access'], data['refresh']);
+      await saveRole(data['role'] ?? 'citizen');
       await saveCitizen(data['citizen']);
+    }
+    return {'status': res.statusCode, 'data': data};
+  }
+
+  static Future<Map<String, dynamic>> companyLogin(String name, String password) async {
+    final res = await http.post(
+      Uri.parse(companyLoginUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': name, 'password': password}),
+    );
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode == 200) {
+      await saveTokens(data['access'], data['refresh']);
+      await saveRole(data['role'] ?? 'company');
+      await saveCompany(data['company']);
     }
     return {'status': res.statusCode, 'data': data};
   }
@@ -85,6 +127,7 @@ class AuthService {
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     if (res.statusCode == 201) {
       await saveTokens(data['access'], data['refresh']);
+      await saveRole(data['role'] ?? 'citizen');
       await saveCitizen(data['citizen']);
     }
     return {'status': res.statusCode, 'data': data};
