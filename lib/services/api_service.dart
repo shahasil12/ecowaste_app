@@ -30,6 +30,7 @@ class ApiService {
     required File image,
     double? latitude,
     double? longitude,
+    int? companyId,
   }) async {
     final token = await AuthService.getAccessToken();
     final request = http.MultipartRequest('POST', Uri.parse(reportsUrl));
@@ -39,6 +40,7 @@ class ApiService {
     request.fields['fee'] = fee.toString();
     if (latitude != null)  request.fields['latitude']  = latitude.toString();
     if (longitude != null) request.fields['longitude'] = longitude.toString();
+    if (companyId != null) request.fields['assigned_company'] = companyId.toString();
 
     request.files.add(await http.MultipartFile.fromPath('image', image.path));
 
@@ -59,6 +61,14 @@ class ApiService {
 
   static Future<List<dynamic>> getRecyclingCenters() async {
     final res = await http.get(Uri.parse(recyclingCentersUrl));
+    if (res.statusCode == 200) return jsonDecode(res.body) as List;
+    return [];
+  }
+
+  // ─── Companies ─────────────────────────────────────────────────────────────
+
+  static Future<List<dynamic>> getCompanies() async {
+    final res = await http.get(Uri.parse('$baseUrl/companies/'));
     if (res.statusCode == 200) return jsonDecode(res.body) as List;
     return [];
   }

@@ -22,6 +22,8 @@ class _ReportScreenState extends State<ReportScreen> {
   bool _loading = false;
   double? _latitude;
   double? _longitude;
+  List<dynamic> _companies = [];
+  int? _selectedCompanyId;
 
   final List<String> _wasteTypes = [
     'Plastic', 'Organic', 'E-waste', 'Metal', 'Glass', 'Other'
@@ -35,6 +37,17 @@ class _ReportScreenState extends State<ReportScreen> {
     'Glass':   const Color(0xFF26C6DA),
     'Other':   const Color(0xFFBDBDBD),
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCompanies();
+  }
+
+  Future<void> _fetchCompanies() async {
+    final companies = await ApiService.getCompanies();
+    if (mounted) setState(() => _companies = companies);
+  }
 
   @override
   void dispose() {
@@ -98,6 +111,7 @@ class _ReportScreenState extends State<ReportScreen> {
         image: _image!,
         latitude: _latitude,
         longitude: _longitude,
+        companyId: _selectedCompanyId,
       );
       if (!mounted) return;
       if (result['status'] == 201) {
@@ -281,6 +295,32 @@ class _ReportScreenState extends State<ReportScreen> {
                   if (int.tryParse(v) == null) return 'Enter a valid number';
                   return null;
                 },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Company Assigner
+              DropdownButtonFormField<int>(
+                value: _selectedCompanyId,
+                dropdownColor: AppTheme.cardLight,
+                style: const TextStyle(color: AppTheme.textPrimary),
+                decoration: const InputDecoration(
+                  labelText: 'Assign to Company (Optional)',
+                  prefixIcon: Icon(Icons.business),
+                ),
+                items: [
+                  const DropdownMenuItem<int>(
+                    value: null,
+                    child: Text('Leave Unassigned'),
+                  ),
+                  ..._companies.map((c) {
+                    return DropdownMenuItem<int>(
+                      value: c['id'],
+                      child: Text(c['name']),
+                    );
+                  })
+                ],
+                onChanged: (val) => setState(() => _selectedCompanyId = val),
               ),
               const SizedBox(height: 36),
 

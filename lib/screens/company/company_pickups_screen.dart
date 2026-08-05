@@ -6,7 +6,8 @@ import '../../core/theme.dart';
 import '../../services/auth_service.dart';
 
 class CompanyPickupsScreen extends StatefulWidget {
-  const CompanyPickupsScreen({super.key});
+  final bool hideAppBar;
+  const CompanyPickupsScreen({super.key, this.hideAppBar = false});
 
   @override
   State<CompanyPickupsScreen> createState() => _CompanyPickupsScreenState();
@@ -70,7 +71,7 @@ class _CompanyPickupsScreenState extends State<CompanyPickupsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pickup Requests')),
+      appBar: widget.hideAppBar ? null : AppBar(title: const Text('Pickup Requests')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _pickups.isEmpty

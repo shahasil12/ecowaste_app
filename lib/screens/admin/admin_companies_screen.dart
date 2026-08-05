@@ -6,7 +6,8 @@ import '../../core/theme.dart';
 import '../../services/auth_service.dart';
 
 class AdminCompaniesScreen extends StatefulWidget {
-  const AdminCompaniesScreen({super.key});
+  final bool hideAppBar;
+  const AdminCompaniesScreen({super.key, this.hideAppBar = false});
 
   @override
   State<AdminCompaniesScreen> createState() => _AdminCompaniesScreenState();
@@ -60,7 +61,7 @@ class _AdminCompaniesScreenState extends State<AdminCompaniesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Companies')),
+      appBar: widget.hideAppBar ? null : AppBar(title: const Text('Manage Companies')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(

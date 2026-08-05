@@ -13,8 +13,14 @@ class CompanyDashboardScreen extends StatefulWidget {
 }
 
 class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
+  int _selectedIndex = 0;
   Map<String, dynamic>? _companyData;
   bool _loading = true;
+
+  final List<Widget> _pages = [
+    const CompanyReportsScreen(hideAppBar: true),
+    const CompanyPickupsScreen(hideAppBar: true),
+  ];
 
   @override
   void initState() {
@@ -56,41 +62,17 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
           )
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            const Icon(Icons.business_center, size: 80, color: AppTheme.primary),
-            const SizedBox(height: 20),
-            const Text(
-              'Company Portal',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-            ),
-            const SizedBox(height: 40),
-            _buildCard(context, 'Assigned Reports', Icons.report_problem, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CompanyReportsScreen()));
-            }),
-            _buildCard(context, 'Pickup Requests', Icons.local_shipping, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CompanyPickupsScreen()));
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCard(BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      color: const Color(0xFF1A3B5C),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: Icon(icon, color: AppTheme.primary, size: 30),
-        title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-        trailing: const Icon(Icons.arrow_forward_ios, color: AppTheme.textSecondary),
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: AppTheme.surface,
+        selectedItemColor: AppTheme.primary,
+        unselectedItemColor: AppTheme.textSecondary,
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.report_problem), label: 'Reports'),
+          BottomNavigationBarItem(icon: Icon(Icons.local_shipping), label: 'Pickups'),
+        ],
       ),
     );
   }

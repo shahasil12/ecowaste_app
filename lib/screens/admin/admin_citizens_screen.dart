@@ -6,7 +6,8 @@ import '../../core/theme.dart';
 import '../../services/auth_service.dart';
 
 class AdminCitizensScreen extends StatefulWidget {
-  const AdminCitizensScreen({super.key});
+  final bool hideAppBar;
+  const AdminCitizensScreen({super.key, this.hideAppBar = false});
 
   @override
   State<AdminCitizensScreen> createState() => _AdminCitizensScreenState();
@@ -60,7 +61,7 @@ class _AdminCitizensScreenState extends State<AdminCitizensScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Citizens')),
+      appBar: widget.hideAppBar ? null : AppBar(title: const Text('Manage Citizens')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
