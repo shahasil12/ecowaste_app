@@ -28,6 +28,7 @@ const String adminLoginUrl      = '$baseUrl/admin/login/';
 const String adminCitizensUrl   = '$baseUrl/admin/citizens/';
 const String adminCompaniesUrl  = '$baseUrl/admin/companies/';
 const String adminReportsUrl    = '$baseUrl/admin/reports/';
+const String adminBinsUrl       = '$baseUrl/admin/bins/';
 
 // Company Portal
 const String companyReportsUrl  = '$baseUrl/companies/reports/';

@@ -89,4 +89,55 @@ class ApiService {
     if (res.statusCode == 200) return jsonDecode(res.body) as List;
     return [];
   }
+
+  // ─── Dashboards ────────────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> getAdminDashboardStats() async {
+    try {
+      final headers = await AuthService.authHeaders();
+      final responses = await Future.wait([
+        http.get(Uri.parse(adminCitizensUrl), headers: headers),
+        http.get(Uri.parse(adminCompaniesUrl), headers: headers),
+        http.get(Uri.parse(adminReportsUrl), headers: headers),
+        http.get(Uri.parse(adminBinsUrl), headers: headers),
+      ]);
+      
+      final citizens = responses[0].statusCode == 200 ? jsonDecode(responses[0].body) as List : [];
+      final companies = responses[1].statusCode == 200 ? jsonDecode(responses[1].body) as List : [];
+      final reports = responses[2].statusCode == 200 ? jsonDecode(responses[2].body) as List : [];
+      final bins = responses[3].statusCode == 200 ? jsonDecode(responses[3].body) as List : [];
+
+      return {
+        'citizensCount': citizens.length,
+        'companiesCount': companies.length,
+        'reportsCount': reports.length,
+        'binsCount': bins.length,
+        'reports': reports,
+      };
+    } catch (e) {
+      return {};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getCompanyDashboardStats() async {
+    try {
+      final headers = await AuthService.authHeaders();
+      final responses = await Future.wait([
+        http.get(Uri.parse(companyReportsUrl), headers: headers),
+        http.get(Uri.parse(companyPickupsUrl), headers: headers),
+      ]);
+      
+      final reports = responses[0].statusCode == 200 ? jsonDecode(responses[0].body) as List : [];
+      final pickups = responses[1].statusCode == 200 ? jsonDecode(responses[1].body) as List : [];
+
+      return {
+        'reportsCount': reports.length,
+        'pickupsCount': pickups.length,
+        'reports': reports,
+        'pickups': pickups,
+      };
+    } catch (e) {
+      return {};
+    }
+  }
 }

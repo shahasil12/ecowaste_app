@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../services/auth_service.dart';
 import '../login_screen.dart';
+import 'admin_overview_screen.dart';
 import 'admin_citizens_screen.dart';
 import 'admin_companies_screen.dart';
 import 'admin_reports_screen.dart';
+import 'admin_bins_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -17,9 +19,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
+    const AdminOverviewScreen(hideAppBar: true),
     const AdminCitizensScreen(hideAppBar: true),
     const AdminCompaniesScreen(hideAppBar: true),
     const AdminReportsScreen(hideAppBar: true),
+    const AdminBinsScreen(hideAppBar: true),
   ];
 
   void _logout(BuildContext context) async {
@@ -47,10 +51,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         unselectedItemColor: AppTheme.textSecondary,
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
+        type: BottomNavigationBarType.fixed,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Overview'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Citizens'),
           BottomNavigationBarItem(icon: Icon(Icons.business), label: 'Companies'),
           BottomNavigationBarItem(icon: Icon(Icons.report), label: 'Reports'),
+          BottomNavigationBarItem(icon: Icon(Icons.delete), label: 'Bins'),
         ],
       ),
     );

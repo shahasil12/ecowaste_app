@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import '../core/theme.dart';
+import 'company/company_overview_screen.dart';
 import 'company/company_reports_screen.dart';
 import 'company/company_pickups_screen.dart';
 
@@ -18,6 +19,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
   bool _loading = true;
 
   final List<Widget> _pages = [
+    const CompanyOverviewScreen(hideAppBar: true),
     const CompanyReportsScreen(hideAppBar: true),
     const CompanyPickupsScreen(hideAppBar: true),
   ];
@@ -70,6 +72,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Overview'),
           BottomNavigationBarItem(icon: Icon(Icons.report_problem), label: 'Reports'),
           BottomNavigationBarItem(icon: Icon(Icons.local_shipping), label: 'Pickups'),
         ],
@@ -77,3 +80,4 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
     );
   }
 }
+
